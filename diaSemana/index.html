@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Dias da Semana</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 1.6rem;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        button {
+            color: white;
+            background-color: rgb(68, 192, 68);
+            border-radius: 10px;
+            margin: 40px 15px;
+            padding: 15px 25px;
+            font-size: 1.6rem;
+            cursor: pointer;
+            border: 1px solid rgb(68, 192, 68);
+        }
+    </style>
+</head>
+<body>
+    <h1>Escolha seu dia da semana:</h1>
+    <div class="buttons-container">
+    <button data-dia="segunda">Segunda</button>
+    <button data-dia="terça">Terça</button>
+    <button data-dia="quarta">Quarta</button>
+    <button data-dia="quinta">Quinta</button>
+    <button data-dia="sexta">Sexta</button>
+    <button data-dia="fim-de-semana">Fim de semana</button>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const buttons = document.querySelectorAll('button');
+
+            buttons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const dia = this.getAttribute('data-dia');
+                });
+            });
+        };
+    </script>
+</body>
+</html>
