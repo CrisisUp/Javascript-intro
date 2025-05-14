@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo da Cobrinha</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    canvas {
+      background-color: #111;
+      border: 2px solid #0f0;
+    }
+
+    #placar {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Jogo da Cobrinha</h1>
+  <canvas id="game" width="400" height="400"></canvas>
+  <div id="placar">Pontos: 0</div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const tamanho = 20; // tamanho de cada quadrado
+    const largura = canvas.width / tamanho;
+    const altura = canvas.height / tamanho;
+
+    let cobrinha = [{ x: 10, y: 10 }];
+    let direcao = { x: 0, y: 0 };
+    let maca = gerarMaca();
+    let pontos = 0;
+    let jogoAtivo = true;
+
+    function gerarMaca() {
+      return {
+        x: Math.floor(Math.random() * largura),
+        y: Math.floor(Math.random() * altura)
+      };
+    }
+
+    function desenharQuadrado(x, y, cor) {
+      ctx.fillStyle = cor;
+      ctx.fillRect(x * tamanho, y * tamanho, tamanho - 2, tamanho - 2);
+    }
+
+    function desenharJogo() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Desenhar maçã
+      desenharQuadrado(maca.x, maca.y, "red");
+
+      // Desenhar cobrinha
+      cobrinha.forEach((parte, index) => {
+        desenharQuadrado(parte.x, parte.y, index === 0 ? "lime" : "green");
+      });
+
+      // Mover a cobrinha
+      const cabeca = {
+        x: cobrinha[0].x + direcao.x,
+        y: cobrinha[0].y + direcao.y
+      };
+
+      // Fim de jogo - colidiu com parede
+      if (cabeca.x < 0 || cabeca.x >= largura || cabeca.y < 0 || cabeca.y >= altura) {
+        fimDeJogo();
+        return;
+      }
+
+      // Fim de jogo - colidiu com ela mesma
+      for (let i = 1; i < cobrinha.length; i++) {
+        if (cobrinha[i].x === cabeca.x && cobrinha[i].y === cabeca.y) {
+          fimDeJogo();
+          return;
+        }
+      }
+
+      cobrinha.unshift(cabeca);
+
+      // Comeu a maçã
+      if (cabeca.x === maca.x && cabeca.y === maca.y) {
+        pontos++;
+        document.getElementById("placar").textContent = "Pontos: " + pontos;
+        maca = gerarMaca();
+      } else {
+        cobrinha.pop();
+      }
+    }
+
+    function fimDeJogo() {
+      jogoAtivo = false;
+      alert("Fim de jogo! Pontuação: " + pontos);
+      location.reload(); // reinicia o jogo
+    }
+
+    document.addEventListener("keydown", e => {
+      switch (e.key) {
+        case "ArrowUp":
+        case "w":
+          if (direcao.y !== 1) direcao = { x: 0, y: -1 };
+          break;
+        case "ArrowDown":
+        case "s":
+          if (direcao.y !== -1) direcao = { x: 0, y: 1 };
+          break;
+        case "ArrowLeft":
+        case "a":
+          if (direcao.x !== 1) direcao = { x: -1, y: 0 };
+          break;
+        case "ArrowRight":
+        case "d":
+          if (direcao.x !== -1) direcao = { x: 1, y: 0 };
+          break;
+      }
+    });
+
+    // Loop do jogo
+    setInterval(() => {
+      if (jogoAtivo) desenharJogo();
+    }, 150);
+  </script>
+</body>
+</html>

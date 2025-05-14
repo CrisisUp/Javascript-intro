@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo da Forca</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    #palavra-secreta {
+      font-size: 2em;
+      letter-spacing: 10px;
+      margin: 20px;
+    }
+
+    #letras-erradas {
+      color: red;
+      margin: 20px;
+    }
+
+    #teclado button {
+      margin: 5px;
+      padding: 10px 15px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    #mensagem {
+      font-size: 1.5em;
+      color: green;
+      margin-top: 20px;
+    }
+
+    #reiniciar {
+      display: none;
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Jogo da Forca</h1>
+  <div id="palavra-secreta">_ _ _ _ _</div>
+  <div id="letras-erradas">Letras erradas: </div>
+  <div id="teclado"></div>
+  <div id="mensagem"></div>
+  <button id="reiniciar" onclick="iniciarJogo()">Jogar Novamente</button>
+
+  <script>
+    const palavras = ["banana", "computador", "javascript", "forca", "brasil", "Renata"];
+    let palavraSelecionada = "";
+    let letrasCorretas = [];
+    let letrasErradas = [];
+
+    function iniciarJogo() {
+      palavraSelecionada = palavras[Math.floor(Math.random() * palavras.length)];
+      letrasCorretas = [];
+      letrasErradas = [];
+      document.getElementById("mensagem").textContent = "";
+      document.getElementById("reiniciar").style.display = "none";
+      atualizarPalavra();
+      atualizarLetrasErradas();
+      criarTeclado();
+    }
+
+    function atualizarPalavra() {
+      const palavraDisplay = palavraSelecionada
+        .split("")
+        .map(letra => (letrasCorretas.includes(letra) ? letra : "_"))
+        .join(" ");
+      document.getElementById("palavra-secreta").textContent = palavraDisplay;
+      if (!palavraDisplay.includes("_")) {
+        document.getElementById("mensagem").textContent = "Parabéns! Você venceu!";
+        fimDeJogo();
+      }
+    }
+
+    function atualizarLetrasErradas() {
+      document.getElementById("letras-erradas").textContent =
+        "Letras erradas: " + letrasErradas.join(", ");
+      if (letrasErradas.length >= 6) {
+        document.getElementById("mensagem").textContent = "Você perdeu! A palavra era: " + palavraSelecionada;
+        fimDeJogo();
+      }
+    }
+
+    function criarTeclado() {
+      const teclado = document.getElementById("teclado");
+      teclado.innerHTML = "";
+      const alfabeto = "abcdefghijklmnopqrstuvwxyz".split("");
+      alfabeto.forEach(letra => {
+        const botao = document.createElement("button");
+        botao.textContent = letra;
+        botao.disabled = letrasCorretas.includes(letra) || letrasErradas.includes(letra);
+        botao.onclick = () => verificarLetra(letra);
+        teclado.appendChild(botao);
+      });
+    }
+
+    function verificarLetra(letra) {
+      if (palavraSelecionada.includes(letra)) {
+        letrasCorretas.push(letra);
+      } else {
+        letrasErradas.push(letra);
+      }
+      atualizarPalavra();
+      atualizarLetrasErradas();
+      criarTeclado();
+    }
+
+    function fimDeJogo() {
+      const botoes = document.querySelectorAll("#teclado button");
+      botoes.forEach(botao => botao.disabled = true);
+      document.getElementById("reiniciar").style.display = "inline-block";
+    }
+
+    iniciarJogo();
+  </script>
+</body>
+</html>
