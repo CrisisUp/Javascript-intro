@@ -28,6 +28,19 @@
             cursor: pointer;
             border: 1px solid rgb(68, 192, 68);
         }
+
+        .output {
+            margin-top: 30px;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .segunda {color: #2c3e50; font-size: 1rem;}
+        .terça {color: #8e44ad; font-size: 1.5rem;}
+        .quarta {color: #2980b9; font-size: 2rem;}
+        .quinta {color: #f35400; font-size: 2.5rem;}
+        .sexta {color: #27ae60; font-size: 3rem;}
+        .fim-de-semana {color: #f0b92b; font-size: 3.5rem;}
     </style>
 </head>
 
@@ -42,33 +55,51 @@
         <button data-dia="fim-de-semana">Fim de semana</button>
     </div>
 
+    <!-- Div para mostrar o nome do dia -->
+    <div id="diaSelecionado" class="output"></div>
+
     <script>
         window.onload = function () {
             const buttons = document.querySelectorAll('button');
+            const mensagemDiv = document.getElementById('diaSelecionado');
 
             buttons.forEach(function (button) {
                 button.addEventListener('click', function () {
                     const dia = this.getAttribute('data-dia');
+                    let mensagem = "";
+                    let bgColor = "";
 
-                    switch(dia) {
+                    switch (dia) {
                         case "segunda":
-                            alert("Dia de começar a semana com energia!");
+                            mensagem = "Dia de começar a semana com energia!";
+                            bgColor = "#e0f7fa"; // Azul claro
                             break;
                         case "terça":
-                            alert("Hora de aprender coisas novas!");
+                            mensagem = "Hora de aprender coisas novas!";
+                            bgColor = "#b2ebf2";
                             break;
                         case "quarta":
-                            alert("Metade da semana, continue firme!");
+                            mensagem = "Metade da semana, continue firme!";
+                            bgColor = "#80deea";
                             break;
                         case "quinta":
-                            alert("Quase lá, um pouco mais de esforço!");
+                            mensagem = "Quase lá, um pouco mais de esforço!";
+                            bgColor = "#4dd0e1";
                             break;
                         case "sexta":
-                            alert("Dia de comemorar, ofim de semana está chegando!");
+                            mensagem = "Dia de comemorar, o fim de semana está chegando!";
+                            bgColor = "#26c6da";
                             break;
                         default:
-                            alert("Final de semana! Descanse e divirta-se!");
+                            mensagem = "Final de semana! Descanse e divirta-se!";
+                            bgColor = "#00bcd4";
                     }
+
+                    document.body.style.backgroundColor = bgColor;
+
+                    // Atualiza o conteúdo e a classe da div
+                    mensagemDiv.textContent = mensagem;
+                    mensagemDiv.className = "output " + dia;
                 });
             });
         };
