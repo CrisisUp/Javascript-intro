@@ -12,7 +12,16 @@
       padding: 20px;
     }
 
-    h1 {color: #333;}
+    #canvas-container {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    canvas {
+      background-color: #fff;
+      border: 1px solid #ccc;
+    }
 
     #palavra-secreta {
       font-size: 2em;
@@ -23,6 +32,11 @@
     #letras-erradas {
       color: red;
       margin: 20px;
+    }
+
+    #tentativas-restantes {
+      font-size: 1.2em;
+      margin: 10px;
     }
 
     #teclado button {
@@ -48,8 +62,14 @@
 </head>
 <body>
   <h1>Jogo da Forca</h1>
+
+  <div id="canvas-container">
+    <canvas id="forcaCanvas" width="200" height="250"></canvas>
+  </div>
+
   <div id="palavra-secreta">_ _ _ _ _</div>
   <div id="letras-erradas">Letras erradas: </div>
+  <div id="tentativas-restantes">Tentativas restantes: 6</div>
   <div id="teclado"></div>
   <div id="mensagem"></div>
   <button id="reiniciar" onclick="iniciarJogo()">Jogar Novamente</button>
@@ -59,13 +79,20 @@
     let palavraSelecionada = "";
     let letrasCorretas = [];
     let letrasErradas = [];
+    const maxTentativas = 6;
+
+    const canvas = document.getElementById("forcaCanvas");
+    const ctx = canvas.getContext("2d");
 
     function iniciarJogo() {
-      palavraSelecionada = palavras[Math.floor(Math.random() * palavras.length)];
+      palavraSelecionada = palavras[Math.floor(Math.random() * palavras.length)].toLowerCase();
       letrasCorretas = [];
       letrasErradas = [];
       document.getElementById("mensagem").textContent = "";
       document.getElementById("reiniciar").style.display = "none";
+      document.getElementById("tentativas-restantes").textContent = "Tentativas restantes: " + maxTentativas;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      desenharEstrutura();
       atualizarPalavra();
       atualizarLetrasErradas();
       criarTeclado();
@@ -86,7 +113,13 @@
     function atualizarLetrasErradas() {
       document.getElementById("letras-erradas").textContent =
         "Letras erradas: " + letrasErradas.join(", ");
-      if (letrasErradas.length >= 6) {
+      const tentativasRestantes = maxTentativas - letrasErradas.length;
+      document.getElementById("tentativas-restantes").textContent =
+        "Tentativas restantes: " + tentativasRestantes;
+
+      desenharForca(letrasErradas.length);
+
+      if (tentativasRestantes <= 0) {
         document.getElementById("mensagem").textContent = "Você perdeu! A palavra era: " + palavraSelecionada;
         fimDeJogo();
       }
@@ -106,8 +139,14 @@
     }
 
     function verificarLetra(letra) {
-      if (palavraSelecionada.includes(letra)) {letrasCorretas.push(letra);}
-      else {letrasErradas.push(letra);}
+      if (letrasCorretas.includes(letra) || letrasErradas.includes(letra)) return;
+
+      if (palavraSelecionada.includes(letra)) {
+        letrasCorretas.push(letra);
+      } else {
+        letrasErradas.push(letra);
+      }
+
       atualizarPalavra();
       atualizarLetrasErradas();
       criarTeclado();
@@ -117,6 +156,74 @@
       const botoes = document.querySelectorAll("#teclado button");
       botoes.forEach(botao => botao.disabled = true);
       document.getElementById("reiniciar").style.display = "inline-block";
+    }
+
+    function desenharEstrutura() {
+      ctx.strokeStyle = "#333";
+      ctx.lineWidth = 2;
+      // base
+      ctx.beginPath();
+      ctx.moveTo(10, 240);
+      ctx.lineTo(190, 240);
+      ctx.stroke();
+
+      // poste vertical
+      ctx.beginPath();
+      ctx.moveTo(50, 240);
+      ctx.lineTo(50, 20);
+      ctx.stroke();
+
+      // poste horizontal
+      ctx.beginPath();
+      ctx.moveTo(50, 20);
+      ctx.lineTo(150, 20);
+      ctx.stroke();
+
+      // corda
+      ctx.beginPath();
+      ctx.moveTo(150, 20);
+      ctx.lineTo(150, 40);
+      ctx.stroke();
+    }
+
+    function desenharForca(erros) {
+      switch (erros) {
+        case 1: // cabeça
+          ctx.beginPath();
+          ctx.arc(150, 55, 15, 0, Math.PI * 2);
+          ctx.stroke();
+          break;
+        case 2: // corpo
+          ctx.beginPath();
+          ctx.moveTo(150, 70);
+          ctx.lineTo(150, 120);
+          ctx.stroke();
+          break;
+        case 3: // braço esquerdo
+          ctx.beginPath();
+          ctx.moveTo(150, 80);
+          ctx.lineTo(130, 100);
+          ctx.stroke();
+          break;
+        case 4: // braço direito
+          ctx.beginPath();
+          ctx.moveTo(150, 80);
+          ctx.lineTo(170, 100);
+          ctx.stroke();
+          break;
+        case 5: // perna esquerda
+          ctx.beginPath();
+          ctx.moveTo(150, 120);
+          ctx.lineTo(130, 150);
+          ctx.stroke();
+          break;
+        case 6: // perna direita
+          ctx.beginPath();
+          ctx.moveTo(150, 120);
+          ctx.lineTo(170, 150);
+          ctx.stroke();
+          break;
+      }
     }
 
     iniciarJogo();

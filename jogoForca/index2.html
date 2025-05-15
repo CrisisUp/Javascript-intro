@@ -12,7 +12,7 @@
       padding: 20px;
     }
 
-    h1 {color: #333;}
+    h1 { color: #333; }
 
     #palavra-secreta {
       font-size: 2em;
@@ -23,6 +23,11 @@
     #letras-erradas {
       color: red;
       margin: 20px;
+    }
+
+    #tentativas-restantes {
+      font-size: 1.2em;
+      margin: 10px;
     }
 
     #teclado button {
@@ -50,6 +55,7 @@
   <h1>Jogo da Forca</h1>
   <div id="palavra-secreta">_ _ _ _ _</div>
   <div id="letras-erradas">Letras erradas: </div>
+  <div id="tentativas-restantes">Tentativas restantes: 6</div>
   <div id="teclado"></div>
   <div id="mensagem"></div>
   <button id="reiniciar" onclick="iniciarJogo()">Jogar Novamente</button>
@@ -59,13 +65,15 @@
     let palavraSelecionada = "";
     let letrasCorretas = [];
     let letrasErradas = [];
+    const maxTentativas = 6;
 
     function iniciarJogo() {
-      palavraSelecionada = palavras[Math.floor(Math.random() * palavras.length)];
+      palavraSelecionada = palavras[Math.floor(Math.random() * palavras.length)].toLowerCase();
       letrasCorretas = [];
       letrasErradas = [];
       document.getElementById("mensagem").textContent = "";
       document.getElementById("reiniciar").style.display = "none";
+      document.getElementById("tentativas-restantes").textContent = "Tentativas restantes: " + maxTentativas;
       atualizarPalavra();
       atualizarLetrasErradas();
       criarTeclado();
@@ -86,7 +94,11 @@
     function atualizarLetrasErradas() {
       document.getElementById("letras-erradas").textContent =
         "Letras erradas: " + letrasErradas.join(", ");
-      if (letrasErradas.length >= 6) {
+      const tentativasRestantes = maxTentativas - letrasErradas.length;
+      document.getElementById("tentativas-restantes").textContent =
+        "Tentativas restantes: " + tentativasRestantes;
+
+      if (tentativasRestantes <= 0) {
         document.getElementById("mensagem").textContent = "Você perdeu! A palavra era: " + palavraSelecionada;
         fimDeJogo();
       }
@@ -106,8 +118,15 @@
     }
 
     function verificarLetra(letra) {
-      if (palavraSelecionada.includes(letra)) {letrasCorretas.push(letra);}
-      else {letrasErradas.push(letra);}
+      // Prevenir repetição
+      if (letrasCorretas.includes(letra) || letrasErradas.includes(letra)) return;
+
+      if (palavraSelecionada.includes(letra)) {
+        letrasCorretas.push(letra);
+      } else {
+        letrasErradas.push(letra);
+      }
+
       atualizarPalavra();
       atualizarLetrasErradas();
       criarTeclado();

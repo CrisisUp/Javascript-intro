@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Jogo da Forca com Níveis e Multiplayer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        #topo-jogo {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        #canvas-wrapper {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        canvas {
+            display: block;
+            margin: auto;
+        }
+
+        #teclado {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            max-width: 220px;
+            padding: 10px;
+        }
+
+        #teclado button {
+            padding: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            width: 30px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+        }
+
+        #info-jogo {
+            margin-top: 10px;
+        }
+
+        #nivel {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #palavra-secreta {
+            font-size: 2em;
+            letter-spacing: 10px;
+            margin: 20px 0;
+        }
+
+        #letras-erradas {
+            color: red;
+            margin: 10px 0;
+        }
+
+        #tentativas-restantes {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
+        #mensagem {
+            font-size: 1.5em;
+            color: green;
+            margin-top: 20px;
+        }
+
+        #reiniciar, #modo-multiplayer {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        #entrada-palavra {
+            margin: 10px 0;
+        }
+
+        #entrada-palavra input {
+            padding: 5px;
+            font-size: 1em;
+        }
+
+        @media (max-width: 768px) {
+            #teclado {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Jogo da Forca</h1>
+
+    <div id="topo-jogo">
+        <div id="canvas-wrapper">
+            <canvas id="forcaCanvas" width="200" height="250"></canvas>
+        </div>
+        <div id="teclado"></div>
+    </div>
+
+    <div id="info-jogo">
+        <div id="nivel">Nível: Fácil</div>
+        <div id="palavra-secreta">_ _ _</div>
+        <div id="letras-erradas">Letras erradas: </div>
+        <div id="tentativas-restantes">Tentativas restantes: 6</div>
+        <div id="mensagem"></div>
+
+        <div id="entrada-palavra" style="display: none;">
+            <input type="text" id="palavraManual" placeholder="Digite uma palavra" />
+            <button onclick="iniciarJogo(true)">Iniciar Multiplayer</button>
+        </div>
+
+        <button id="modo-multiplayer" onclick="ativarMultiplayer()">Modo Multiplayer</button>
+        <button id="reiniciar" onclick="iniciarJogo()">Jogar Novamente</button>
+    </div>
+
+    <script>
+        const palavrasPorNivel = {
+            facil: ["banana", "casa", "livro", "brasil", "porta"],
+            medio: ["computador", "abacaxi", "escola", "telefone", "pintor"],
+            dificil: ["javascript", "eletricista", "desenvolvedor", "burocracia", "microscopio"]
+        };
+
+        let nivelAtual = "facil";
+        let vitoriasSeguidas = 0;
+        let palavraSelecionada = "";
+        let letrasCorretas = [];
+        let letrasErradas = [];
+        const maxTentativas = 12;
+        let modoMultiplayer = false;
+
+        const canvas = document.getElementById("forcaCanvas");
+        const ctx = canvas.getContext("2d");
+
+        function removerAcentos(texto) {
+            return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        }
+
+        function iniciarJogo(usandoMultiplayer = false) {
+            if (usandoMultiplayer) {
+                const palavra = document.getElementById("palavraManual").value.trim();
+                if (!palavra) {
+                    alert("Digite uma palavra!");
+                    return;
+                }
+                palavraSelecionada = removerAcentos(palavra);
+                modoMultiplayer = true;
+                document.getElementById("entrada-palavra").style.display = "none";
+            } else {
+                const palavras = palavrasPorNivel[nivelAtual];
+                palavraSelecionada = palavras[Math.floor(Math.random() * palavras.length)];
+                modoMultiplayer = false;
+            }
+
+            letrasCorretas = [];
+            letrasErradas = [];
+            document.getElementById("mensagem").textContent = "";
+            document.getElementById("reiniciar").style.display = "none";
+            document.getElementById("tentativas-restantes").textContent = "Tentativas restantes: " + maxTentativas;
+            document.getElementById("nivel").textContent = "Nível: " + capitalizar(nivelAtual);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            desenharEstrutura();
+            atualizarPalavra();
+            atualizarLetrasErradas();
+            criarTeclado();
+        }
+
+        function capitalizar(texto) {
+            return texto.charAt(0).toUpperCase() + texto.slice(1);
+        }
+
+        function atualizarPalavra() {
+            const palavraDisplay = palavraSelecionada
+                .split("")
+                .map(letra => (letrasCorretas.includes(letra) ? letra : "_"))
+                .join(" ");
+            document.getElementById("palavra-secreta").textContent = palavraDisplay;
+            if (!palavraDisplay.includes("_")) {
+                document.getElementById("mensagem").textContent = "Parabéns! Você venceu!";
+                if (!modoMultiplayer) {
+                    vitoriasSeguidas++;
+                    if (vitoriasSeguidas % 3 === 0) avancarNivel();
+                }
+                fimDeJogo();
+            }
+        }
+
+        function atualizarLetrasErradas() {
+            document.getElementById("letras-erradas").textContent =
+                "Letras erradas: " + letrasErradas.join(", ");
+            const tentativasRestantes = maxTentativas - letrasErradas.length;
+            document.getElementById("tentativas-restantes").textContent =
+                "Tentativas restantes: " + tentativasRestantes;
+
+            desenharForca(letrasErradas.length);
+
+            if (tentativasRestantes <= 0) {
+                document.getElementById("mensagem").textContent = "Você perdeu! A palavra era: " + palavraSelecionada;
+                vitoriasSeguidas = 0;
+                fimDeJogo();
+            }
+        }
+
+        function criarTeclado() {
+            const teclado = document.getElementById("teclado");
+            teclado.innerHTML = "";
+            const alfabeto = "abcdefghijklmnopqrstuvwxyz".split("");
+            alfabeto.forEach(letra => {
+                const botao = document.createElement("button");
+                botao.textContent = letra;
+                botao.disabled = letrasCorretas.includes(letra) || letrasErradas.includes(letra);
+                botao.onclick = () => verificarLetra(letra);
+                teclado.appendChild(botao);
+            });
+        }
+
+        function verificarLetra(letra) {
+            if (letrasCorretas.includes(letra) || letrasErradas.includes(letra)) return;
+            if (palavraSelecionada.includes(letra)) {
+                letrasCorretas.push(letra);
+            } else {
+                letrasErradas.push(letra);
+            }
+            atualizarPalavra();
+            atualizarLetrasErradas();
+            criarTeclado();
+        }
+
+        function fimDeJogo() {
+            document.querySelectorAll("#teclado button").forEach(btn => btn.disabled = true);
+            document.getElementById("reiniciar").style.display = "inline-block";
+        }
+
+        function avancarNivel() {
+            if (nivelAtual === "facil") {
+                nivelAtual = "medio";
+                alert("Você avançou para o nível MÉDIO!");
+            } else if (nivelAtual === "medio") {
+                nivelAtual = "dificil";
+                alert("Você avançou para o nível DIFÍCIL!");
+            }
+        }
+
+        function ativarMultiplayer() {
+            document.getElementById("entrada-palavra").style.display = "block";
+            document.getElementById("palavraManual").value = "";
+        }
+
+        function desenharEstrutura() {
+            ctx.strokeStyle = "#333";
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(10, 240); ctx.lineTo(190, 240); ctx.stroke(); // base
+            ctx.beginPath(); ctx.moveTo(50, 240); ctx.lineTo(50, 20); ctx.stroke(); // poste vertical
+            ctx.beginPath(); ctx.moveTo(50, 20); ctx.lineTo(150, 20); ctx.stroke(); // poste horizontal
+            ctx.beginPath(); ctx.moveTo(150, 20); ctx.lineTo(150, 40); ctx.stroke(); // corda
+        }
+
+        function desenharForca(etapa) {
+            ctx.strokeStyle = "#000";
+            switch (etapa) {
+                case 1: ctx.beginPath(); ctx.arc(150, 55, 15, 0, Math.PI * 2); ctx.stroke(); break;
+                case 2: ctx.beginPath(); ctx.moveTo(150, 70); ctx.lineTo(150, 120); ctx.stroke(); break;
+                case 3: ctx.beginPath(); ctx.moveTo(150, 80); ctx.lineTo(130, 100); ctx.stroke(); break;
+                case 4: ctx.beginPath(); ctx.moveTo(150, 80); ctx.lineTo(170, 100); ctx.stroke(); break;
+                case 5: ctx.beginPath(); ctx.moveTo(150, 120); ctx.lineTo(130, 150); ctx.stroke(); break;
+                case 6: ctx.beginPath(); ctx.moveTo(150, 120); ctx.lineTo(170, 150); ctx.stroke(); break;
+                case 7: ctx.beginPath(); ctx.arc(130, 100, 3, 0, Math.PI * 2); ctx.stroke(); break;
+                case 8: ctx.beginPath(); ctx.arc(170, 100, 3, 0, Math.PI * 2); ctx.stroke(); break;
+                case 9: ctx.beginPath(); ctx.arc(130, 150, 3, 0, Math.PI * 2); ctx.stroke(); break;
+                case 10: ctx.beginPath(); ctx.arc(170, 150, 3, 0, Math.PI * 2); ctx.stroke(); break;
+                case 11: ctx.beginPath(); ctx.arc(144, 52, 1.5, 0, Math.PI * 2); ctx.stroke();
+                         ctx.beginPath(); ctx.arc(156, 52, 1.5, 0, Math.PI * 2); ctx.stroke(); break;
+                case 12: ctx.beginPath(); ctx.arc(150, 60, 5, 0, Math.PI, true); ctx.stroke(); break;
+            }
+        }
+
+        // Suporte ao teclado físico
+        window.addEventListener("keydown", (e) => {
+            const letra = e.key.toLowerCase();
+            if (/^[a-z]$/.test(letra)) {
+                verificarLetra(letra);
+            }
+        });
+
+        iniciarJogo();
+    </script>
+</body>
+</html>

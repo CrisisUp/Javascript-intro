@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Jogo da Forca</title>
+    <style>
+        /* Estilo geral do corpo da página */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Container que contém o canvas e o teclado */
+        #canvas-container {
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            /* Alinha o conteúdo no topo */
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        /* Estilo para o canvas da forca */
+        canvas {
+            background-color: #fff;
+            border: 1px solid #ccc;
+        }
+
+        /* Estilo da palavra secreta exibida */
+        #palavra-secreta {
+            font-size: 2em;
+            letter-spacing: 10px;
+            margin: 20px;
+        }
+
+        /* Estilo das letras erradas */
+        #letras-erradas {
+            color: red;
+            margin: 20px;
+        }
+
+        /* Estilo para o contador de tentativas restantes */
+        #tentativas-restantes {
+            font-size: 1.2em;
+            margin: 10px;
+        }
+
+        /* Estilo para o teclado */
+        #teclado {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            max-width: 220px;
+            padding: 10px;
+        }
+
+        /* Estilo dos botões do teclado */
+        #teclado button {
+            padding: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            width: 30px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Estilo dos botões quando a letra é correta */
+        .tecla-certa {
+            background-color: #c8e6c9;
+            border-color: #66bb6a;
+        }
+
+        /* Estilo dos botões quando a letra é errada */
+        .tecla-errada {
+            background-color: #ffcdd2;
+            border-color: #ef5350;
+        }
+
+        /* Estilo para a mensagem de vitória/derrota */
+        #mensagem {
+            font-size: 1.5em;
+            color: green;
+            margin-top: 20px;
+        }
+
+        /* Botão para reiniciar o jogo */
+        #reiniciar {
+            display: none;
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        /* Estilos de responsividade para telas menores */
+        @media (max-width: 768px) {
+
+            /* Organiza o teclado em uma coluna única em telas menores */
+            #teclado {
+                grid-template-columns: repeat(4, 1fr);
+                max-width: 280px;
+            }
+        }
+
+        /* Estilo para o canvas quando em telas pequenas */
+        @media (max-width: 500px) {
+            canvas {
+                width: 150px;
+                height: 200px;
+            }
+
+            #palavra-secreta {
+                font-size: 1.5em;
+                letter-spacing: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Jogo da Forca</h1>
+
+    <div id="canvas-container">
+        <canvas id="forcaCanvas" width="200" height="250"></canvas>
+    </div>
+
+    <div id="palavra-secreta">_ _ _ _ _</div>
+    <div id="letras-erradas">Letras erradas: </div>
+    <div id="tentativas-restantes">Tentativas restantes: 6</div>
+    <div id="teclado"></div>
+    <div id="mensagem"></div>
+    <button id="reiniciar" onclick="iniciarJogo()">Jogar Novamente</button>
+
+    <script>
+        const palavras = ["banana", "computador", "javascript", "força", "brasil", "Renata", "açúcar", "pão", "coração"];
+        let palavraSelecionada = "";
+        let letrasCorretas = [];
+        let letrasErradas = [];
+        const maxTentativas = 12;
+        let ultimaPalavra = "";
+
+        const canvas = document.getElementById("forcaCanvas");
+        const ctx = canvas.getContext("2d");
+
+        function normalizar(letra) {
+            return letra.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        }
+
+        function escolherNovaPalavra() {
+            let nova;
+            do {
+                nova = palavras[Math.floor(Math.random() * palavras.length)].toLowerCase();
+            } while (nova === ultimaPalavra && palavras.length > 1);
+            ultimaPalavra = nova;
+            return nova;
+        }
+
+        function iniciarJogo() {
+            palavraSelecionada = escolherNovaPalavra();
+            letrasCorretas = [];
+            letrasErradas = [];
+            document.getElementById("mensagem").textContent = "";
+            document.getElementById("reiniciar").style.display = "none";
+            document.getElementById("tentativas-restantes").textContent = "Tentativas restantes: " + maxTentativas;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            desenharEstrutura();
+            atualizarPalavra();
+            atualizarLetrasErradas();
+            criarTeclado();
+        }
+
+        function atualizarPalavra() {
+            const palavraDisplay = palavraSelecionada
+                .split("")
+                .map(letra => (letrasCorretas.includes(normalizar(letra)) ? letra : "_"))
+                .join(" ");
+            document.getElementById("palavra-secreta").textContent = palavraDisplay;
+            if (!palavraDisplay.includes("_")) {
+                document.getElementById("mensagem").textContent = "Parabéns! Você venceu!";
+                fimDeJogo();
+            }
+        }
+
+        function atualizarLetrasErradas() {
+            document.getElementById("letras-erradas").textContent =
+                "Letras erradas: " + letrasErradas.join(", ");
+            const tentativasRestantes = maxTentativas - letrasErradas.length;
+            document.getElementById("tentativas-restantes").textContent =
+                "Tentativas restantes: " + tentativasRestantes;
+
+            desenharForca(letrasErradas.length);
+
+            if (tentativasRestantes <= 0) {
+                document.getElementById("mensagem").textContent = "Você perdeu! A palavra era: " + palavraSelecionada;
+                fimDeJogo();
+            }
+        }
+
+        function criarTeclado() {
+            const teclado = document.getElementById("teclado");
+            teclado.innerHTML = "";
+            const alfabeto = "abcdefghijklmnopqrstuvwxyz".split("");
+            alfabeto.forEach(letra => {
+                const botao = document.createElement("button");
+                botao.textContent = letra;
+                botao.id = "tecla-" + letra;
+                botao.disabled = letrasCorretas.includes(letra) || letrasErradas.includes(letra);
+                botao.onclick = () => verificarLetra(letra, botao);
+                teclado.appendChild(botao);
+            });
+        }
+
+        function verificarLetra(letra, botao = null) {
+            const letraNormalizada = normalizar(letra);
+            if (letrasCorretas.includes(letraNormalizada) || letrasErradas.includes(letraNormalizada)) return;
+
+            if (normalizar(palavraSelecionada).includes(letraNormalizada)) {
+                letrasCorretas.push(letraNormalizada);
+                if (botao) botao.classList.add("tecla-certa");
+            } else {
+                letrasErradas.push(letraNormalizada);
+                if (botao) botao.classList.add("tecla-errada");
+            }
+
+            atualizarPalavra();
+            atualizarLetrasErradas();
+            criarTeclado();
+        }
+
+        function fimDeJogo() {
+            const botoes = document.querySelectorAll("#teclado button");
+            botoes.forEach(botao => botao.disabled = true);
+            document.getElementById("reiniciar").style.display = "inline-block";
+        }
+
+        function desenharEstrutura() {
+            ctx.strokeStyle = "#333";
+            ctx.lineWidth = 2;
+            // base
+            ctx.beginPath();
+            ctx.moveTo(10, 240);
+            ctx.lineTo(190, 240);
+            ctx.stroke();
+
+            // poste vertical
+            ctx.beginPath();
+            ctx.moveTo(50, 240);
+            ctx.lineTo(50, 20);
+            ctx.stroke();
+
+            // poste horizontal
+            ctx.beginPath();
+            ctx.moveTo(50, 20);
+            ctx.lineTo(150, 20);
+            ctx.stroke();
+
+            // corda
+            ctx.beginPath();
+            ctx.moveTo(150, 20);
+            ctx.lineTo(150, 40);
+            ctx.stroke();
+        }
+
+        function desenharForca(etapa) {
+            ctx.strokeStyle = "#000";
+            switch (etapa) {
+                case 1:
+                    ctx.beginPath();
+                    ctx.arc(150, 55, 15, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                case 2:
+                    ctx.beginPath();
+                    ctx.moveTo(150, 70);
+                    ctx.lineTo(150, 120);
+                    ctx.stroke();
+                    break;
+                case 3:
+                    ctx.beginPath();
+                    ctx.moveTo(150, 80);
+                    ctx.lineTo(130, 100);
+                    ctx.stroke();
+                    break;
+                case 4:
+                    ctx.beginPath();
+                    ctx.moveTo(150, 80);
+                    ctx.lineTo(170, 100);
+                    ctx.stroke();
+                    break;
+                case 5:
+                    ctx.beginPath();
+                    ctx.moveTo(150, 120);
+                    ctx.lineTo(130, 150);
+                    ctx.stroke();
+                    break;
+                case 6:
+                    ctx.beginPath();
+                    ctx.moveTo(150, 120);
+                    ctx.lineTo(170, 150);
+                    ctx.stroke();
+                    break;
+                case 7:
+                    ctx.beginPath();
+                    ctx.arc(130, 100, 3, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                case 8:
+                    ctx.beginPath();
+                    ctx.arc(170, 100, 3, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                case 9:
+                    ctx.beginPath();
+                    ctx.arc(130, 150, 3, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                case 10:
+                    ctx.beginPath();
+                    ctx.arc(170, 150, 3, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                case 11:
+                    ctx.beginPath();
+                    ctx.arc(144, 52, 1.5, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(156, 52, 1.5, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                case 12:
+                    ctx.beginPath();
+                    ctx.arc(150, 60, 5, 0, Math.PI, true);
+                    ctx.stroke();
+                    break;
+            }
+        }
+
+        // Digitação via teclado físico
+        document.addEventListener("keydown", (e) => {
+            const letra = e.key.toLowerCase();
+            if (/^[a-z]$/.test(letra)) {
+                const botao = document.getElementById("tecla-" + letra);
+                if (botao && !botao.disabled) {
+                    verificarLetra(letra, botao);
+                }
+            }
+        });
+
+        iniciarJogo();
+    </script>
+</body>
+
+</html>
