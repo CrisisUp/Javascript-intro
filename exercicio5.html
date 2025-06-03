@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+   <script>
+    let mat = [5.8, 7.9, 4.5, 1.2, 2.3, 7.9, 4.6, 2.9, 2.35, 8.9, 10.9];
+    let repetir;
+
+    do {
+        let inicio = parseInt(prompt("Digite um índice de 0 a " + (mat.length - 1) + ":"));
+
+        if (!isNaN(inicio) && inicio >= 0 && inicio < mat.length) {
+            alert("Valor na posição " + inicio + ": " + mat[inicio]);
+        } else {alert("Índice inválido.");}
+
+        repetir = prompt("Digite 's' para continuar.");
+    } while (repetir === "s" || repetir === "S");
+</script>
+
+</body>
+
+</html>

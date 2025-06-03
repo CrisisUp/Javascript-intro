@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        let numeros = [];
+        for (i = 1; i < 6; i++) {
+            let numero = parseInt(prompt(`Digite o ${i}º número inteiro:`));
+            numeros.push(numero);
+        }
+
+        let multiplicador = parseInt(prompt("Digite o número multiplicador:"));
+        let resultados = numeros.map(numero => numero * multiplicador);
+
+        alert(
+            "Números digitados: " + numeros.join(", ") + "\n" +
+            "Multiplicador: " + "[ " +multiplicador + " ]" + "\n" +
+            "Resultados: " + resultados.join(", ")
+        );
+    </script>
+</body>
+
+</html>

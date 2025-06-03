@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        let nome = prompt("Digite seu nome: ");
+        let peso = parseFloat(prompt("Digite o peso (ex: 58.7): "));
+        let altura = parseFloat(prompt("Digite a altura (ex: 1.66): "));
+        let imc = peso / (altura * altura);
+
+        if (imc > 0.0 && imc <= 17.0) {alert(nome + ", você está muito abaixo do peso.");} 
+        else if (imc > 17.0 && imc <= 18.5) {alert(nome + ", você está abaixo do peso");}
+        else if (imc > 18.5 && imc <= 25.0) {alert(nome + ", parabens, você está com o peso ideal");}
+        else if (imc > 25.0 && imc <= 30.0) {alert(nome + ", você está acima do peso.");}
+        else if (imc > 30.0 && imc <= 35.0) {alert("Obesidade 1");}
+        else if (imc > 35.0 && imc <= 40.0) {alert("Obesidade 2(severa)");}
+        else if (imc > 40.0) {alert("Obesidade 3(mórbida)");}
+        else {alert("Valores invalidos")}
+    </script>
+</body>
+</html>

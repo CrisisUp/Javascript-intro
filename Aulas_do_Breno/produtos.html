@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        let codigo = parseInt(prompt("Código lido: "));
+
+        switch (codigo) {
+            case 1:
+                alert("Código para alimento não perecível");
+                break
+            case 2:
+            case 3:
+            case 4:
+                alert("Código para alimento perecível");
+                break
+            case 5:
+            case 6:
+                alert("Código para produtos de vestuário");
+                break
+            case 7:
+                alert("Código para produtos de higiene pessoal");
+                break
+            case 8:
+                alert("Código para produtos de limpeza ou utensílios domésticos");
+                break
+            default:
+                alert("Código Inválido!")
+        }
+    </script>
+</body>
+</html>

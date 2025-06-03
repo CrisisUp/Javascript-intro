@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dias da Semana</title>
+</head>
+
+<body>
+    <script>
+        function diaDaSemana(num) {
+            const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+            return dias[num] ?? "Número inválido";
+        }
+
+        let sair;
+        do {
+            let entrada = prompt("Digite (0...6) para o dia da semana (ou 's' para sair):");
+            if (entrada.toLowerCase() === 's') { sair = true; }
+            else {
+                let num = parseInt(entrada);
+                alert(diaDaSemana(num));
+                sair = false;
+            }
+        } while (!sair);
+    </script>
+</body>
+
+</html>
