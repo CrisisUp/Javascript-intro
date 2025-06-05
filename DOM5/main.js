@@ -11,20 +11,21 @@ form.addEventListener("submit", (e) => {
 
 let formValidation = () => {
     if (postagem.value === "") {
-        txtPostagem.innerHTML = "Postagem nao pode estar em branco"
-        console.log("falha")
+        txtPostagem.innerHTML = "Postagem nao pode estar em branco";
+        txtPostagem.style.color = "red";
+        console.log("falha");
     } else {
-        console.log("sucesso...")
-        txtPostagem.innerHTML = ""
-        acceptData()
+        console.log("sucesso...");
+        txtPostagem.innerHTML = "";
+        acceptData();
     }
 }
 
 let data = {};
 let acceptData = () => {
-    data["text"] = postagem.value
-    console.log(data)
-    createPost()
+    data["text"] = postagem.value;
+    console.log(data);
+    createPost();
 }
 
 let createPost = () => {
@@ -37,11 +38,11 @@ let createPost = () => {
         </span>
     </div>
     `
-    postagem.value = ""
+    postagem.value = "";
 }
 
 let deletePost = (e) => { e.parentElement.parentElement.remove(); }
 let editPost = (e) => {
-    postagem.value = e.parentElement.previousElementSibling.innerHTML
-    e.parentElement.parentElement.remove()
+    postagem.value = e.parentElement.previousElementSibling.innerHTML;
+    e.parentElement.parentElement.remove();
 }
