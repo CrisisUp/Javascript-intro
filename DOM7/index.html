@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mercadinho da Esquina</title>
+</head>
+
+<body>
+    <script>
+        let produtos = [];
+        let continuar = true;
+
+        function gerarCodigo() {
+            return Math.floor(100000 + Math.random() * 900000);
+        }
+
+        let codigoNotaFiscal = gerarCodigo();
+        let dataEmissao = new Date().toLocaleDateString('pt-BR');
+        let horaEmissao = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        while (continuar) {
+            let nome = prompt("Digite o nome do produto: ");
+            let valorUnitario = parseFloat(prompt("Digite o valor unitário do produto:").replace(",", "."));
+            let quantidade = parseInt(prompt("Digite a quantidade comprada: "));
+
+            if (isNaN(valorUnitario) || isNaN(quantidade)) {
+                alert("Valor ou quantidade inválida. Tente novamente.");
+                continue;
+            }
+
+            let valorTotal = valorUnitario * quantidade;
+            let codigoProduto = gerarCodigo();
+            produtos.push({ codigo: codigoProduto, nome, quantidade, valorUnitario, valorTotal });
+            let resposta = prompt("Deseja adicionar outro produto? (sim/não)").toLowerCase();
+            if (resposta !== "sim") { continuar = false; }
+        }
+
+        let valorFinal = produtos.reduce((total, produto) => total + produto.valorTotal, 0);
+
+        // Formatando a nota fiscal
+        let notaFiscal = `
+==================================
+        MERCADINHO DA ESQUINA
+==================================
+       Nota Fiscal #${codigoNotaFiscal}
+Data: ${dataEmissao}  Hora: ${horaEmissao}
+-------------------------------
+CÓDIGO | DESCRIÇÃO       | QTD | V. UNITÁRIO | V. TOTAL
+-------+-----------------+-----+-------------+-----------
+`;
+
+        produtos.forEach(produto => {
+            notaFiscal += `
+            ${produto.codigo} | 
+            ${produto.nome.padEnd(15)} | 
+            ${produto.quantidade.toString().padStart(3)} | 
+            ${produto.valorUnitario
+            .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+            .padStart(9)} | 
+            ${produto.valorTotal
+            .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+            .padStart(10)}\n
+            `;
+        });
+
+        notaFiscal += `
+-------------------------------------------------------
+TOTAL A PAGAR: ${valorFinal
+.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+.padStart(25)}
+=======================================================
+Obrigado pela preferência!
+Volte sempre!`;
+
+        alert(notaFiscal);
+    </script>
+</body>
+
+</html>

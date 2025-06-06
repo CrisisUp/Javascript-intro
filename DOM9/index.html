@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mercadinho - PDV</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, button {
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        button.secondary {
+            background-color: #f44336;
+        }
+        .nf-container {
+            margin-top: 30px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .nf-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        .nf-table th, .nf-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .nf-table th {
+            background-color: #f2f2f2;
+        }
+        .product-list {
+            margin: 20px 0;
+        }
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .nf-container, .nf-container * {
+                visibility: visible;
+            }
+            .nf-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                border: none;
+            }
+            button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>PDV Mercadinho</h1>
+        
+        <div id="form-container">
+            <div class="form-group">
+                <label for="produto-nome">Nome do Produto:</label>
+                <input type="text" id="produto-nome" maxlength="50" placeholder="Digite o nome do produto">
+            </div>
+            
+            <div class="form-group">
+                <label for="produto-valor">Valor Unitário:</label>
+                <input type="text" id="produto-valor" placeholder="Ex: 5,99" 
+                       oninput="formatarValor(this)">
+            </div>
+            
+            <div class="form-group">
+                <label for="produto-quantidade">Quantidade:</label>
+                <input type="number" id="produto-quantidade" min="1" value="1">
+            </div>
+            
+            <button id="adicionar-btn">Adicionar Produto</button>
+            <button id="finalizar-btn" class="secondary">Finalizar Compra</button>
+            
+            <div id="product-list" class="product-list"></div>
+        </div>
+        
+        <div id="nf-container" class="nf-container" style="display:none;"></div>
+    </div>
+
+    <script>
+        const produtos = [];
+        const codigosUsados = new Set();
+        let codigoNotaFiscal = gerarCodigoUnico();
+
+        // Elementos DOM
+        const nomeInput = document.getElementById('produto-nome');
+        const valorInput = document.getElementById('produto-valor');
+        const quantidadeInput = document.getElementById('produto-quantidade');
+        const adicionarBtn = document.getElementById('adicionar-btn');
+        const finalizarBtn = document.getElementById('finalizar-btn');
+        const productList = document.getElementById('product-list');
+        const nfContainer = document.getElementById('nf-container');
+
+        // Formatar valor monetário durante a digitação
+        function formatarValor(input) {
+            let value = input.value.replace(/\D/g, '');
+            value = (value/100).toFixed(2) + '';
+            value = value.replace(".", ",");
+            value = value.replace(/(\d)(\d{3})(\d{3}),/g, "$1.$2.$3,");
+            value = value.replace(/(\d)(\d{3}),/g, "$1.$2,");
+            input.value = value;
+        }
+
+        // Gerar código único
+        function gerarCodigoUnico() {
+            let codigo;
+            do {
+                codigo = Math.floor(100000 + Math.random() * 900000);
+            } while (codigosUsados.has(codigo));
+            codigosUsados.add(codigo);
+            return codigo;
+        }
+
+        // Validar produto
+        function validarProduto(nome, valor, quantidade) {
+            const erros = [];
+            
+            if (!nome || nome.trim().length === 0 || nome.length > 50) {
+                erros.push("Nome inválido (máx. 50 caracteres)");
+            }
+
+            const valorNumerico = parseFloat(valor.replace(',', '.'));
+            if (isNaN(valorNumerico) || valorNumerico <= 0) {
+                erros.push("Valor unitário deve ser positivo");
+            }
+
+            if (!Number.isInteger(quantidade) || quantidade <= 0) {
+                erros.push("Quantidade deve ser inteiro positivo");
+            }
+
+            return erros;
+        }
+
+        // Formatador de moeda
+        function formatarMoeda(valor) {
+            return valor.toLocaleString('pt-BR', { 
+                style: 'currency', 
+                currency: 'BRL',
+                minimumFractionDigits: 2
+            });
+        }
+
+        // Atualizar lista de produtos
+        function atualizarListaProdutos() {
+            productList.innerHTML = '';
+            
+            if (produtos.length === 0) {
+                productList.innerHTML = '<p>Nenhum produto adicionado</p>';
+                return;
+            }
+            
+            produtos.forEach((produto, index) => {
+                const div = document.createElement('div');
+                div.className = 'product-item';
+                div.innerHTML = `
+                    <span>${produto.nome} - ${produto.quantidade}x ${formatarMoeda(produto.valorUnitario)}</span>
+                    <span>${formatarMoeda(produto.valorTotal)}</span>
+                    <button onclick="removerProduto(${index})" class="secondary">×</button>
+                `;
+                productList.appendChild(div);
+            });
+        }
+
+        // Remover produto
+        window.removerProduto = function(index) {
+            if (confirm(`Remover ${produtos[index].nome} da lista?`)) {
+                produtos.splice(index, 1);
+                atualizarListaProdutos();
+            }
+        }
+
+        // Mostrar nota fiscal
+        function mostrarNotaFiscal() {
+            const total = produtos.reduce((sum, p) => sum + p.valorTotal, 0);
+            const now = new Date();
+            
+            const html = `
+                <h2>MERCADINHO DA ESQUINA</h2>
+                <p><strong>Nota Fiscal #${codigoNotaFiscal}</strong></p>
+                <p>Data: ${now.toLocaleDateString('pt-BR')} - Hora: ${now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</p>
+                
+                <table class="nf-table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Descrição</th>
+                            <th>Qtd.</th>
+                            <th>V. Unit.</th>
+                            <th>V. Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${produtos.map(p => `
+                            <tr>
+                                <td>${p.codigo}</td>
+                                <td>${escapeHtml(p.nome)}</td>
+                                <td>${p.quantidade}</td>
+                                <td>${formatarMoeda(p.valorUnitario)}</td>
+                                <td>${formatarMoeda(p.valorTotal)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" style="text-align:right"><strong>TOTAL:</strong></td>
+                            <td><strong>${formatarMoeda(total)}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                
+                <div style="margin-top: 20px;">
+                    <button onclick="window.print()">Imprimir Nota</button>
+                    <button onclick="salvarNota()">Salvar como PDF</button>
+                    <button onclick="novaVenda()" class="secondary">Nova Venda</button>
+                </div>
+            `;
+            
+            nfContainer.innerHTML = html;
+            nfContainer.style.display = 'block';
+            document.getElementById('form-container').style.display = 'none';
+        }
+
+        // Sanitizar HTML
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Salvar nota como PDF (simulação)
+        window.salvarNota = function() {
+            alert("Funcionalidade de PDF seria implementada com bibliotecas como jsPDF");
+            // Na prática: usar jsPDF ou similar para gerar PDF
+        }
+
+        // Nova venda
+        window.novaVenda = function() {
+            produtos.length = 0;
+            codigoNotaFiscal = gerarCodigoUnico();
+            nfContainer.style.display = 'none';
+            document.getElementById('form-container').style.display = 'block';
+            atualizarListaProdutos();
+            nomeInput.focus();
+        }
+
+        // Adicionar produto
+        adicionarBtn.addEventListener('click', () => {
+            const nome = nomeInput.value.trim();
+            const valor = valorInput.value;
+            const quantidade = parseInt(quantidadeInput.value);
+            
+            const erros = validarProduto(nome, valor, quantidade);
+            
+            if (erros.length > 0) {
+                alert("Erros:\n" + erros.join("\n"));
+                return;
+            }
+            
+            const valorNumerico = parseFloat(valor.replace(',', '.'));
+            const codigo = gerarCodigoUnico();
+            const produto = {
+                codigo,
+                nome,
+                valorUnitario: valorNumerico,
+                quantidade,
+                valorTotal: valorNumerico * quantidade
+            };
+            
+            produtos.push(produto);
+            atualizarListaProdutos();
+            
+            // Limpar campos
+            nomeInput.value = '';
+            valorInput.value = '';
+            quantidadeInput.value = '1';
+            nomeInput.focus();
+        });
+
+        // Finalizar compra
+        finalizarBtn.addEventListener('click', () => {
+            if (produtos.length === 0) {
+                alert("Adicione pelo menos um produto para finalizar");
+                return;
+            }
+            
+            mostrarNotaFiscal();
+        });
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            atualizarListaProdutos();
+            nomeInput.focus();
+        });
+    </script>
+</body>
+</html>
