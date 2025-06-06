@@ -1,58 +1,60 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mercadinho - PDV</title>
     <style>
-        body { font-family: monospace; }
-        .nf-container { max-width: 100%; overflow-x: auto; }
-        .nf-table { border-collapse: collapse; width: 100%; }
-        .nf-table th, .nf-table td { padding: 5px; border: 1px solid #ddd; }
+        body {font-family: monospace;}
+
+        .nf-container {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .nf-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .nf-table th,
+        .nf-table td {
+            padding: 5px;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
+
 <body>
     <div id="app">
         <div id="nf-container" class="nf-container" style="display:none;"></div>
     </div>
 
     <script>
-        const produtos = [];
-        let codigoNotaFiscal = gerarCodigoUnico();
-
-        // Banco de códigos usados para evitar duplicatas
         const codigosUsados = new Set();
+        const produtos = [];
+        let codigoNotaFiscal = gerarCodigoUnico();        
 
         function gerarCodigoUnico() {
             let codigo;
-            do {
-                codigo = Math.floor(100000 + Math.random() * 900000);
-            } while (codigosUsados.has(codigo));
+            do {codigo = Math.floor(100000 + Math.random() * 900000);}
+            while (codigosUsados.has(codigo));
             codigosUsados.add(codigo);
             return codigo;
         }
 
         function validarProduto(nome, valor, quantidade) {
             const erros = [];
-            
-            if (!nome || nome.length > 50) {
-                erros.push("Nome inválido (máx. 50 caracteres)");
-            }
-
-            if (isNaN(valor) || valor <= 0) {
-                erros.push("Valor unitário deve ser positivo");
-            }
-
-            if (!Number.isInteger(quantidade) || quantidade <= 0) {
-                erros.push("Quantidade deve ser inteiro positivo");
-            }
-
+            if (!nome || nome.length > 50) {erros.push("Nome inválido (máx. 50 caracteres)");}
+            if (isNaN(valor) || valor <= 0) {erros.push("Valor unitário deve ser positivo");}
+            if (!Number.isInteger(quantidade) || quantidade <= 0) {erros.push("Quantidade deve ser inteiro positivo");}
             return erros;
         }
 
         function formatarMoeda(valor) {
-            return valor.toLocaleString('pt-BR', { 
-                style: 'currency', 
+            return valor.toLocaleString('pt-BR', {
+                style: 'currency',
                 currency: 'BRL',
                 minimumFractionDigits: 2
             });
@@ -94,7 +96,7 @@
                 </table>
                 <button onclick="window.print()">Imprimir Nota</button>
             `;
-            
+
             document.getElementById('nf-container').innerHTML = html;
             document.getElementById('nf-container').style.display = 'block';
         }
@@ -103,23 +105,23 @@
             while (true) {
                 const nome = prompt("Nome do produto (máx. 50 caracteres):");
                 if (nome === null) return false; // Usuário cancelou
-                
+
                 const valorInput = prompt("Valor unitário (ex: 5,99):");
                 if (valorInput === null) return false;
-                
+
                 const qtdInput = prompt("Quantidade:");
                 if (qtdInput === null) return false;
-                
+
                 const valor = parseFloat(valorInput.replace(",", "."));
                 const quantidade = parseInt(qtdInput);
-                
+
                 const erros = validarProduto(nome, valor, quantidade);
-                
+
                 if (erros.length > 0) {
                     alert("Erros:\n" + erros.join("\n"));
                     continue;
                 }
-                
+
                 const codigo = gerarCodigoUnico();
                 const produto = {
                     codigo,
@@ -128,27 +130,21 @@
                     quantidade,
                     valorTotal: valor * quantidade
                 };
-                
+
                 produtos.push(produto);
                 alert(`Adicionado:\n${produto.nome} - ${produto.quantidade}x ${formatarMoeda(produto.valorUnitario)}`);
-                
-                return confirm("Deseja adicionar outro produto?");
-            }
+                return confirm("Deseja adicionar outro produto?");}
         }
 
         // Fluxo principal
         (async function main() {
             let continuar = true;
-            while (continuar) {
-                continuar = await adicionarProduto();
-            }
-            
-            if (produtos.length > 0) {
-                mostrarNotaFiscal();
-            } else {
-                alert("Nenhum produto foi adicionado.");
-            }
+            while (continuar) {continuar = await adicionarProduto();}
+
+            if (produtos.length > 0) {mostrarNotaFiscal();}
+            else {alert("Nenhum produto foi adicionado.");}
         })();
     </script>
 </body>
+
 </html>
